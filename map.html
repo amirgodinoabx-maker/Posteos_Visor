@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Route + Vehicles</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css"/>
+
+    <script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js"></script>
+
+    <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<script>
+
+/* =====================================================
+   MAP
+===================================================== */
+const DEFAULT_CENTER = [-77.0428, -12.0464]; // Lima
+const map = new maplibregl.Map({
+    container: 'map',
+    style: 'https://tiles.openfreemap.org/styles/bright',
+    zoom: 11,
+    center: DEFAULT_CENTER,
+    attributionControl: false
+});
+
+let routeCoords = [];
+let markers = {};
+let playbackPoints = [];
+
+let playbackIndex = 0;
+
+let timer = null;
+
+let vehicleMarker = null;
+
+/* =====================================================
+   MAP READY
+===================================================== */
+
+map.on('load', () => {
+
+    map.dragPan.enable();
+    map.scrollZoom.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoomRotate.enable();
+    map.dragRotate.disable();
+    map.keyboard.enable();
+
+    map.addSource('route', {
+        type: 'geojson',
+        data: {
+            type: 'Feature',
+            geometry: {
+                type: 'LineString',
+                coordinates: []
+            }
+        }
+    });
+
+    map.addLayer({
+        id: 'route',
+        type: 'line',
+        source: 'route',
+        layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+        },
+        paint: {
+            'line-color': '#0055FF',
+            'line-width': 4
+        }
+    });
+
+    cargarTrack();
+
+    if (window.AndroidInterface?.onMapReady) {
+        window.AndroidInterface.onMapReady();
+    }
+});
+
+/* =====================================================
+   ROTACIÓN
+===================================================== */
+
+function calculateBearing(coords) {
+
+    if (!coords || coords.length < 2) return 0;
+
+    const [lng1, lat1] = coords[0];
+    const [lng2, lat2] = coords[coords.length - 1];
+
+    const dx = lng2 - lng1;
+    const dy = lat2 - lat1;
+
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    return -angle;
+}
+
+/* =====================================================
+   ROUTE
+===================================================== */
+
+function normalizeLeftToRight(coords) {
+
+    if (coords.length < 2) return coords;
+
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+
+    if (first[0] > last[0]) {
+        return [...coords].reverse();
+    }
+
+    return coords;
+}
+
+function loadMapContext(routeStr) {
+
+    if (!routeStr || !routeStr.trim()) return;
+
+    const coords = routeStr
+        .split('|')
+        .map(p => {
+            const [lng, lat] = p.split(',');
+            return [Number(lng), Number(lat)];
+        })
+        .filter(c => !isNaN(c[0]) && !isNaN(c[1]));
+
+    if (coords.length < 2) return;
+
+    routeCoords = normalizeLeftToRight(coords);
+
+    const source = map.getSource('route');
+    if (!source) return;
+
+    source.setData({
+        type: 'Feature',
+        geometry: {
+            type: 'LineString',
+            coordinates: routeCoords
+        }
+    });
+
+    const bearing = calculateBearing(routeCoords);
+    map.setBearing(bearing);
+}
+
+/* =====================================================
+   VEHICLES
+===================================================== */
+
+function getVehicleIcon(colorType) {
+    switch (colorType) {
+        case 1: return 'img/ic_bus_green.png';
+        case 2: return 'img/ic_bus_red.png';
+        case 3: return 'img/ic_bus_orange.png';
+        default: return 'img/bus.png';
+    }
+}
+
+function parseVehicles(raw) {
+
+    if (!raw?.trim()) return [];
+
+    return raw.split('*')
+        .map(v => {
+
+            const p = v.split('|');
+
+            return {
+                lng: parseFloat(p[0]),
+                lat: parseFloat(p[1]),
+                padron: (p[2] || '').trim(),
+                target: p[3] === '1',
+                id: (p[4] || '').trim(),
+                colorType: p[5] ? parseInt(p[5]) : null,
+                time: p[p.length - 1]
+            };
+
+        })
+        .filter(v => !isNaN(v.lng) && !isNaN(v.lat));
+}
+
+/* =====================================================
+   MARKER
+===================================================== */
+
+function createVehicleMarker(v) {
+
+    const root = document.createElement('div');
+
+    root.style.cssText = `
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+    `;
+
+    const timeLabel = document.createElement('div');
+    timeLabel.innerText = v.time || '';
+
+    timeLabel.style.cssText = `
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 3px 8px;
+        border-radius: 8px;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        border: 1px solid rgba(255,255,255,0.15);
+        text-align: center;
+    `;
+
+    const label = document.createElement('div');
+    label.innerText = v.padron || '';
+
+    label.style.cssText = `
+        background: ${v.target ? '#1E88E5' : 'rgba(20, 20, 20, 0.75)'};
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        padding: 4px 10px;
+        border-radius: 10px;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        border: 1px solid rgba(255,255,255,0.15);
+        text-align: center;
+    `;
+
+    // 🚗 ICONO
+    const img = document.createElement('img');
+    img.src = getVehicleIcon(v.colorType);
+    img.style.width = "20px";
+    img.style.height = "20px";
+
+    root.appendChild(timeLabel);
+    root.appendChild(label);
+    root.appendChild(img);
+
+    return new maplibregl.Marker({
+        element: root,
+        offset: [0, -18]
+    }).setLngLat([v.lng, v.lat]).addTo(map);
+}
+
+/* =====================================================
+   ANIMATION
+===================================================== */
+
+function animateMarker(markerObj, vehicle) {
+
+    markerObj.targetLng = vehicle.lng;
+    markerObj.targetLat = vehicle.lat;
+
+    if (markerObj.animating) return;
+
+    markerObj.animating = true;
+
+    function step() {
+
+        const dx = markerObj.targetLng - markerObj.curLng;
+        const dy = markerObj.targetLat - markerObj.curLat;
+
+        if (Math.abs(dx) < 0.000001 && Math.abs(dy) < 0.000001) {
+
+            markerObj.curLng = markerObj.targetLng;
+            markerObj.curLat = markerObj.targetLat;
+
+            markerObj.instance.setLngLat([markerObj.curLng, markerObj.curLat]);
+
+            markerObj.animating = false;
+            return;
+        }
+
+        markerObj.curLng += dx * 0.08;
+        markerObj.curLat += dy * 0.08;
+
+        markerObj.instance.setLngLat([markerObj.curLng, markerObj.curLat]);
+
+        requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+}
+
+/* =====================================================
+   ZOOM VEHÍCULOS
+===================================================== */
+
+function fitVehiclesOnly(vehicles) {
+
+    const bounds = new maplibregl.LngLatBounds();
+    let hasPoints = false;
+
+    vehicles.forEach(v => {
+        bounds.extend([v.lng, v.lat]);
+        hasPoints = true;
+    });
+
+    if (!hasPoints) return;
+
+    map.fitBounds(bounds, {
+        padding: 100,
+        duration: 700,
+        maxZoom: 18
+    });
+}
+
+/* =====================================================
+   UPDATE VEHICLES
+===================================================== */
+
+function updateVehicles(raw) {
+
+    const vehicles = parseVehicles(raw);
+    if (!vehicles.length) return;
+
+    const incomingIds = new Set(vehicles.map(v => v.id));
+
+    /* =====================================================
+       DELETE (remove markers not present anymore)
+    ===================================================== */
+    Object.keys(markers).forEach(id => {
+        if (!incomingIds.has(id)) {
+            markers[id].instance.remove();
+            delete markers[id];
+        }
+    });
+
+    /* =====================================================
+       CREATE / UPDATE
+    ===================================================== */
+    vehicles.forEach(v => {
+
+        let m = markers[v.id];
+
+        /* -------------------------
+           CREATE
+        ------------------------- */
+        if (!m) {
+
+            const marker = createVehicleMarker(v);
+            const el = marker.getElement();
+
+            m = markers[v.id] = {
+                instance: marker,
+                element: el,
+
+                //  referencias directas (NO querySelector genérico)
+                timeEl: el.querySelector('.vehicle-time'),
+                labelEl: el.querySelector('.vehicle-padron'),
+                imgEl: el.querySelector('img'),
+
+                curLng: v.lng,
+                curLat: v.lat,
+                targetLng: v.lng,
+                targetLat: v.lat,
+                animating: false
+            };
+        }
+
+        /* -------------------------
+           UPDATE VISUALS
+        ------------------------- */
+
+        // icon update
+        if (m.imgEl) {
+            m.imgEl.src = getVehicleIcon(v.colorType);
+        }
+
+        // padron update
+        if (m.labelEl) {
+            m.labelEl.innerText = v.padron || '';
+        }
+
+        // time update (NUEVO)
+        if (m.timeEl) {
+            m.timeEl.innerText = v.time || '';
+        }
+
+        /* -------------------------
+           POSITION ANIMATION
+        ------------------------- */
+        animateMarker(m, v);
+    });
+
+    /* =====================================================
+       FIT MAP (optional auto zoom)
+    ===================================================== */
+    fitVehiclesOnly(vehicles);
+}
+
+const params = new URLSearchParams(window.location.search);
+
+const ruta = params.get("ruta");
+const placa = params.get("placa");
+const fecha = params.get("fecha");
+
+
+console.log(ruta);
+console.log(placa);
+console.log(fecha);
+
+
+const API_URL = "https://dronexrabbit.abexacloud.com";
+
+
+async function cargarTrack(){
+
+
+    const url =
+    `${API_URL}/tracks/${ruta}/${placa}/${fecha}`;
+
+
+    console.log("TRACK URL:", url);
+
+
+    try {
+
+
+        const response = await fetch(url);
+
+
+        const result = await response.json();
+
+
+        console.log("TRACK:", result);
+
+
+
+        playbackPoints = result.data;
+
+
+
+        if(!playbackPoints || playbackPoints.length === 0){
+
+            document.getElementById("info").innerText =
+            "Sin tracks";
+
+            return;
+        }
+
+
+        //polilineas
+
+        dibujarTrack();
+
+
+        vehicleMarker = createPlaybackMarker(playbackPoints[0]);
+
+
+
+        map.flyTo({
+
+            center:[
+                playbackPoints[0].longitude,
+                playbackPoints[0].latitude
+            ],
+
+            zoom:16
+
+        });
+
+
+
+        document.getElementById("info").innerText =
+        `${playbackPoints.length} puntos`;
+
+
+
+    }catch(e){
+
+        console.error(e);
+
+    }
+
+
+}
+
+
+function irATrama(lat, lng){
+
+    map.flyTo({
+        center: [lng, lat],
+        zoom: 18,
+        duration: 800
+    });
+
+    if(vehicleMarker){
+        vehicleMarker.setLngLat([lng, lat]);
+    }
+
+}
+
+
+function dibujarTrack(){
+
+    const coords = playbackPoints.map(p => [
+        p.longitude,
+        p.latitude
+    ]);
+
+    // Si la fuente ya existe, solo actualiza la línea
+    if(map.getSource("track")){
+
+        map.getSource("track").setData({
+
+            type: "Feature",
+
+            geometry: {
+                type: "LineString",
+                coordinates: coords
+            }
+
+        });
+
+        return;
+    }
+
+    // Crear la fuente
+    map.addSource("track", {
+
+        type: "geojson",
+
+        data: {
+
+            type: "Feature",
+
+            geometry: {
+                type: "LineString",
+                coordinates: coords
+            }
+
+        }
+
+    });
+
+    // Crear la capa que dibuja la polilínea
+    map.addLayer({
+
+        id: "track",
+
+        type: "line",
+
+        source: "track",
+
+        layout: {
+            "line-join": "round",
+            "line-cap": "round"
+        },
+
+        paint: {
+            "line-color": "#00AA00",
+            "line-width": 5
+        }
+
+    });
+
+}
+
+function createPlaybackMarker(point){
+
+    const el = document.createElement("img");
+
+    el.src = "img/bus.png";
+    el.style.width = "35px";
+    el.style.height = "35px";
+
+    return new maplibregl.Marker({
+        element: el,
+        anchor: "center"
+    })
+    .setLngLat([
+        point.longitude,
+        point.latitude
+    ])
+    .addTo(map);
+
+}
+
+
+</script>
+
+</body>
+</html>

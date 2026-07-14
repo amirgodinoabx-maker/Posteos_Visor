@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Consulta de Despachos</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="logo">
+        <i class="fa-solid fa-truck-fast"></i>
+        <h2>Consulta de Despachos</h2>
+    </div>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- FILTROS -->
+
+    <section class="card">
+
+        <div class="card-title">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <div>
+                <h3>Filtros de Búsqueda</h3>
+                <p>Ingrese los datos para buscar despachos</p>
+            </div>
+
+        </div>
+
+
+        <div class="filters">
+
+
+            <div class="form-group">
+
+                <label>Ruta</label>
+
+                <input 
+                    id="ruta"
+                    type="text"
+                    class="form-input"
+                    placeholder="Ingrese la ruta">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Placa</label>
+
+                <input 
+                    id="placa"
+                    type="text"
+                    class="form-input"
+                    placeholder="Ingrese la placa">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>Fecha</label>
+
+                <input 
+                    id="fecha"
+                    type="date"
+                    class="form-input">
+
+            </div>
+
+
+            <div class="form-group button-group">
+
+                <button class="btn btn-primary"
+                        onclick="buscarDespachos()">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    Buscar
+
+                </button>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- DESPACHOS -->
+
+
+    <section class="card">
+
+
+        <div class="card-header">
+
+            <h3>
+                <i class="fa-solid fa-list"></i>
+                Resultado de Despachos
+            </h3>
+
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table class="table">
+
+
+                <thead>
+
+                <tr>
+
+                    <th>#</th>
+                    <th>Despacho</th>
+                    <th>Primer Track</th>
+                    <th>Track</th>
+                    <th>ACK</th>
+                    <th>Diferencia (Seg.)</th>
+                    <th>Acción</th>
+
+                </tr>
+
+                </thead>
+
+
+                <tbody id="tbodyDespachos">
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
+    </section>
+
+<section class="content-layout">
+
+    <!-- TABLA -->
+    <section class="card tabla-card">
+
+        <div class="card-header">
+            <div>
+                <h3 class="green">
+                    <i class="fa-solid fa-location-dot"></i>
+                    Posteos del Despacho
+                </h3>
+
+                <p>Lista de tramas recibidas.</p>
+            </div>
+        </div>
+
+        <div class="table-container">
+
+            <table class="table">
+
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Estado</th>
+                        <th>Fecha/Hora</th>
+                        <th>Latitud</th>
+                        <th>Longitud</th>
+                        <th>Velocidad</th>
+                        <th>Dirección</th>
+                        <th>IMEI</th>
+                        <th>GPS</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tbodyPosteos"></tbody>
+
+            </table>
+
+            <div id="paginacion"></div>
+
+        </div>
+
+    </section>
+
+    <!-- MAPA -->
+    <section class="card mapa-card" id="mapContainer" style="display:none">
+
+        <div class="card-header">
+            <h3>
+                <i class="fa-solid fa-map"></i>
+                Reproductor
+            </h3>
+        </div>
+
+        <iframe
+            id="mapFrame"
+            src=""
+            style="width:100%;height:700px;border:none;border-radius:10px;">
+        </iframe>
+
+    </section>
+
+</section>
+
+
+
+
+
+
+<script src="app.js"></script>
+
+
+</body>
+
+</html>

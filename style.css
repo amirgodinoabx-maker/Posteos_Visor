@@ -1,0 +1,528 @@
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+
+    margin: 0;
+    padding: 20px;
+
+    font-family: Arial, sans-serif;
+
+    background: #f5f7fa;
+
+}
+
+
+/* HEADER */
+
+.topbar {
+
+    background: #1976d2;
+
+    color:white;
+
+    padding:15px 25px;
+
+    border-radius:8px;
+
+    margin-bottom:20px;
+
+}
+
+
+.logo {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+
+.logo i {
+
+    font-size:28px;
+
+}
+
+
+
+/* CONTENEDOR */
+
+
+.container {
+
+    width:100%;
+    max-width:none;
+    margin:0;
+
+}
+
+
+
+/* CARD */
+
+
+.card {
+
+    background:white;
+
+    border-radius:10px;
+
+    padding:20px;
+
+    margin-bottom:20px;
+
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+
+}
+
+
+
+.card-title {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    margin-bottom:20px;
+
+}
+
+
+.card-title i {
+
+    font-size:25px;
+
+    color:#1976d2;
+
+}
+
+
+
+.card h3 {
+
+    margin:0;
+
+}
+
+
+.card p {
+
+    margin:5px 0;
+
+    color:#666;
+
+}
+
+
+
+
+/* FILTROS */
+
+
+.filters {
+
+    display:flex;
+
+    gap:15px;
+
+    align-items:end;
+
+    flex-wrap:wrap;
+
+}
+
+
+.form-group {
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+
+label {
+
+    font-weight:bold;
+
+    margin-bottom:6px;
+
+}
+
+
+
+.form-input {
+
+    padding:10px;
+
+    min-width:200px;
+
+    border:1px solid #ccc;
+
+    border-radius:6px;
+
+}
+
+
+
+.form-input:focus {
+
+    outline:none;
+
+    border-color:#1976d2;
+
+}
+
+
+
+/* BOTONES */
+
+
+.btn {
+
+    border:none;
+
+    padding:11px 18px;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+}
+
+
+
+.btn-primary {
+
+    background:#1976d2;
+
+    color:white;
+
+}
+
+
+.btn-primary:hover {
+
+    background:#1565c0;
+
+}
+
+
+
+.btn-secondary {
+
+    background:#757575;
+
+    color:white;
+
+}
+
+
+
+/* HEADER TABLA */
+
+
+.card-header {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:15px;
+
+}
+
+
+
+.green {
+
+    color:#2e7d32;
+
+}
+
+
+
+
+
+/* TABLAS */
+
+
+.table-container {
+
+    width:100%;
+    max-height:700px;
+    overflow-y:auto;
+
+}
+
+
+
+.table {
+    width:100%;
+    table-layout:fixed;
+    border-collapse:collapse;
+    font-size:14px;
+}
+
+
+
+.table th {
+
+
+    background:#1976d2;
+
+    color:white;
+
+    padding:14px 18px;
+
+    text-align:center;
+
+    white-space:nowrap;
+
+}
+
+
+
+.table td {
+
+
+    padding:14px 18px;
+
+    text-align:center;
+
+    border-bottom:1px solid #ddd;
+
+    white-space:nowrap;
+
+}
+
+
+
+.table tbody tr:hover {
+
+
+    background:#f3f8ff;
+
+
+}
+
+
+
+
+/* ANCHOS */
+
+
+.table th:nth-child(1),
+.table td:nth-child(1){
+
+    width:50px;
+
+}
+
+
+
+.table th:nth-child(2),
+.table td:nth-child(2),
+.table th:nth-child(3),
+.table td:nth-child(3){
+
+    min-width:220px;
+
+}
+
+
+
+.table th:nth-child(4),
+.table td:nth-child(4),
+.table th:nth-child(5),
+.table td:nth-child(5){
+
+    min-width:90px;
+
+}
+
+
+
+/* BADGES */
+
+
+.badge {
+
+
+    display:inline-block;
+
+    padding:6px 12px;
+
+    border-radius:15px;
+
+    color:white;
+
+    font-weight:bold;
+
+}
+
+
+
+.badge-success {
+
+    background:#2e7d32;
+
+}
+
+
+
+.badge-warning {
+
+    background:#f9a825;
+
+}
+
+
+
+.badge-danger {
+
+    background:#c62828;
+
+}
+
+
+
+/* LOADING */
+
+
+.loading {
+
+    text-align:center;
+
+    padding:20px;
+
+}
+
+/* ================================
+   TABLA + MAPA
+================================ */
+
+/* TABLA + MAPA */
+.content-layout {
+    display:flex;
+    gap:20px;
+    width:100%;
+}
+
+.tabla-card {
+    flex: 1.6;
+    min-width: 0;
+}
+
+.mapa-card {
+    flex: 1;
+    min-width: 0;
+}
+
+.status-dot {
+    display:inline-block;
+    width:12px;
+    height:12px;
+    border-radius:50%;
+}
+
+.status-dot-red {
+    background:#f44336;
+}
+
+
+.status-dot-green {
+    background:#2e7d32;
+}
+
+
+/* MOBILE */
+
+
+@media(max-width:700px){
+
+
+    body {
+
+        padding:10px;
+
+    }
+
+
+    .filters {
+
+        flex-direction:column;
+
+        align-items:stretch;
+
+    }
+
+
+    .form-input {
+
+        width:100%;
+
+    }
+
+    .player {
+
+    position:absolute;
+
+    top:20px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    z-index:10;
+
+    background:white;
+
+    padding:10px 15px;
+
+    border-radius:10px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.3);
+
+    display:flex;
+
+    gap:10px;
+
+    align-items:center;
+
+}
+
+
+.player button {
+
+    border:none;
+
+    background:#1976d2;
+
+    color:white;
+
+    padding:8px 15px;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+}
+
+
+
+
+}
